@@ -3,7 +3,7 @@ mod fs;
 mod tasks;
 
 use cli::{CommandLineArgs, Action::*};
-use fs::{add_task};
+use fs::{add_task, complete_task, list_tasks};
 use structopt::StructOpt;
 use tasks::Task;
 use std::path::PathBuf;
@@ -28,7 +28,7 @@ fn main()
     
     match action {
         Add { text } => { add_task(journal_file, Task::new(text)).unwrap(); },
-        Done { position: _ } => {},
-        List => {}
+        Done { position } => { complete_task(journal_file, position).unwrap() },
+        List => { list_tasks(journal_file).unwrap(); }
     }
 }

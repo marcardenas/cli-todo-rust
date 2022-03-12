@@ -1,24 +1,20 @@
-use std::path::PathBuf;
-use std::io::{Error, ErrorKind, Seek, SeekFrom};
-use std::fs::{File, OpenOptions};
 use crate::Task;
+use std::fs::{File, OpenOptions};
+use std::io::{Error, ErrorKind, Seek, SeekFrom};
+use std::path::PathBuf;
 
 pub fn add_task(journal_path: PathBuf, task: Task) -> Result<(), Error> {
-    
     // Open the file.
     let mut file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
         .open(journal_path)?;
-    
     // Consume the file's contents as a vector of tasks.
-    let mut tasks: Vec<Task> = match serde_yaml::from_reader(&file)
-    {
+    let mut tasks: Vec<Task> = match serde_yaml::from_reader(&file) {
         Ok(tasks) => tasks,
-        Err(_e) => Vec::new()
+        Err(_e) => Vec::new(),
     };
-    
     // Rewind the file after reading from it.
     file.seek(SeekFrom::Start(0))?;
 
@@ -28,8 +24,8 @@ pub fn add_task(journal_path: PathBuf, task: Task) -> Result<(), Error> {
 
     Ok(())
 }
-/*
-pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> {
+
+pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<(), Error> {
     // Open the file.
     let mut file = OpenOptions::new()
         .read(true)
@@ -37,14 +33,16 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> 
         .open(journal_path)?;
 
     // Consume the file's contents as a vector of tasks.
-    let mut tasks: Vec<Task> = serde_yaml::from_reader(&file).unwrap();
+    let mut tasks: Vec<Task> = match serde_yaml::from_reader(&file) {
+        Ok(tasks) => tasks,
+        Err(_e) => panic!("Cannot open file for deletion"),
+    };
 
     // Remove the task.
     if task_position == 0 || task_position > tasks.len() {
-        //return Err(Error::new(ErrorKind::InvalidInput, "Invalid Task ID"));
+        return Err(Error::new(ErrorKind::InvalidInput, "Invalid Task ID"));
     }
     tasks.remove(task_position - 1);
-    
     // Rewind and truncate the file.
     file.seek(SeekFrom::Start(0))?;
     file.set_len(0)?;
@@ -55,7 +53,7 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> 
     Ok(())
 }
 
-pub fn list_tasks(journal_path: PathBuf) -> Result<()> {
+pub fn list_tasks(journal_path: PathBuf) -> Result<(), Error> {
     // Open the file.
     let file = OpenOptions::new().read(true).open(journal_path)?;
     // Parse the file and collect the tasks.
@@ -71,15 +69,13 @@ pub fn list_tasks(journal_path: PathBuf) -> Result<()> {
             order += 1;
         }
     }
-    
     Ok(())
 }
 
-fn collect_tasks(mut file: &File) -> Result<Vec<Task>, dyn Error> {
+fn collect_tasks(mut file: &File) -> Result<Vec<Task>, Error> {
     file.seek(SeekFrom::Start(0))?; // Rewind the file before.
     let tasks = serde_yaml::from_reader(file).unwrap();
     file.seek(SeekFrom::Start(0))?; // Rewind the file after.
 
     Ok(tasks)
 }
-*/
